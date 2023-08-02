@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formulario de Reserva</title>
+</head>
+<body>
+  <h1>Formulario de Reserva</h1>
+  <form id="reserva-form">
+    <label for="id_persona">Seleccionar Persona:</label>
+    <select id="id_persona" name="id_persona" required>
+      <!-- Opciones de personas se agregarán aquí -->
+    </select><br><br>
+    
+    <label for="fecha_reserva">Fecha de Reserva:</label>
+    <input type="date" id="fecha_reserva" name="fecha_reserva" required><br><br>
+    
+    <label for="hora_reserva">Hora de Reserva:</label>
+    <input type="time" id="hora_reserva" name="hora_reserva" required><br><br>
+    
+    <label for="duracion">Duración (horas):</label>
+    <input type="number" id="duracion" name="duracion" required><br><br>
+    
+    <label for="monto_pago">Monto de Pago:</label>
+    <input type="number" id="monto_pago" name="monto_pago" required><br><br>
+    
+    <label for="estado">Estado:</label>
+    <select id="estado" name="estado" required>
+      <option value="pendiente">Pendiente</option>
+      <option value="confirmado">Confirmado</option>
+      <option value="completado">Completado</option>
+    </select><br><br>
+    
+    <button type="submit">Crear Reserva</button>
+  </form>
+
+  <script>
+    const form = document.getElementById('reserva-form');
+    const idPersonaSelect = form.querySelector('#id_persona');
+
+    // Obtener la lista de personas desde la API
+    async function obtenerPersonas() {
+      try {
+        const response = await fetch('http://localhost:3000/personas');
+        const personas = await response.json();
+
+        personas.forEach(persona => {
+          const option = document.createElement('option');
+          option.value = persona.id;
+          option.textContent = persona.nombre;
+          idPersonaSelect.appendChild(option);
+        });
+      } catch (error) {
+        console.error('Error al obtener la lista de personas:', error);
+      }
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const formData = new FormData(form);
+      const requestData = {};
+      formData.forEach((value, key) => {
+        requestData[key] = value;
+      });
+
+      try {
+        const response = await fetch('http://localhost:3000/reservas', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestData),
+        });
+
+        const responseData = await response.json();
+        console.log('Respuesta:', responseData);
+        // Muestra una alerta con el mensaje de confirmación y el resumen de la reserva
+        alert('¡Reserva creada exitosamente!\n\nResumen de la reserva:\n' +
+          `Persona: ${idPersonaSelect.options[idPersonaSelect.selectedIndex].text}\n` +
+          `Fecha: ${requestData.fecha_reserva}\n` +
+          `Hora: ${requestData.hora_reserva}\n` +
+          `Duración: ${requestData.duracion} horas\n` +
+          `Monto: $${requestData.monto_pago}\n` +
+          `Estado: ${requestData.estado}`);
+
+        // Limpia el formulario después de la reserva
+        form.reset();
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    });
+
+    obtenerPersonas();
+  </script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buscar Talentos</title>
+</head>
+<body>
+  <h1>Buscar Talentos</h1>
+  
+  <div>
+    <h2>Buscar por Habilidades</h2>
+    <form id="buscar-talentos-form">
+      <label for="habilidades-buscar">Habilidades:</label>
+      <input type="text" id="habilidades-buscar" name="habilidades_buscar" required>
+      <button type="submit">Buscar</button>
+    </form>
+  </div>
+
+  <div>
+    <h2>Resultados de la Búsqueda</h2>
+    <ul id="resultados-list"></ul>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const buscarTalentosForm = document.getElementById('buscar-talentos-form');
+      const resultadosList = document.getElementById('resultados-list');
+
+      buscarTalentosForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const habilidadesBuscar = buscarTalentosForm.habilidades_buscar.value.toLowerCase(); // Convertir a minúsculas
+
+        try {
+          const response = await fetch('http://localhost:3000/personas');
+          const personas = await response.json();
+
+          const resultados = personas.filter(persona => 
+            persona.habilidades.toLowerCase().includes(habilidadesBuscar)
+          );
+
+          resultadosList.innerHTML = '';
+
+          resultados.forEach(persona => {
+            const li = document.createElement('li');
+            li.textContent = `Nombre: ${persona.nombre} - Correo: ${persona.correo_electronico} - Habilidades: ${persona.habilidades} - Tarifa por Hora: ${persona.tarifa_hora}`;
+            resultadosList.appendChild(li);
+          });
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

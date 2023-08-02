@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Usuarios</title>
+</head>
+<body>
+  <h1>Gestión de Usuarios</h1>
+  
+  <div>
+    <h2>Crear Usuario</h2>
+    <form id="crear-usuario-form">
+      <label for="nombre">Nombre:</label>
+      <input type="text" id="nombre" name="nombre" required>
+      <label for="correo">Correo Electrónico:</label>
+      <input type="email" id="correo" name="correo_electronico" required>
+      <label for="habilidades">Habilidades:</label>
+      <input type="text" id="habilidades" name="habilidades" required>
+      <label for="tarifa-hora">Tarifa por Hora:</label>
+      <input type="number" id="tarifa-hora" name="tarifa_hora" required>
+      <button type="submit">Crear</button>
+    </form>
+  </div>
+
+  <div>
+    <h2>Leer Usuarios</h2>
+    <button id="leer-usuarios-btn">Leer Usuarios</button>
+    <ul id="usuarios-list"></ul>
+  </div>
+
+  <div>
+    <h2>Actualizar Usuario</h2>
+    <form id="actualizar-usuario-form">
+      <label for="usuario-id">Seleccione un Usuario:</label>
+      <select id="usuario-id" name="usuario_id">
+      </select>
+      <label for="nuevo-nombre">Nuevo Nombre:</label>
+      <input type="text" id="nuevo-nombre" name="nuevo_nombre">
+      <label for="nuevo-correo">Nuevo Correo Electrónico:</label>
+      <input type="email" id="nuevo-correo" name="nuevo_correo">
+      <label for="nuevas-habilidades">Nuevas Habilidades:</label>
+      <input type="text" id="nuevas-habilidades" name="nuevas_habilidades">
+      <label for="nueva-tarifa">Nueva Tarifa por Hora:</label>
+      <input type="number" id="nueva-tarifa" name="nueva_tarifa">
+      <button type="submit">Actualizar</button>
+    </form>
+  </div>
+
+  <div>
+    <h2>Eliminar Usuario</h2>
+    <form id="eliminar-usuario-form">
+      <label for="eliminar-usuario-id">Seleccione un Usuario:</label>
+      <select id="eliminar-usuario-id" name="eliminar_usuario_id"></select>
+      <button type="submit">Eliminar</button>
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const crearUsuarioForm = document.getElementById('crear-usuario-form');
+      const leerUsuariosBtn = document.getElementById('leer-usuarios-btn');
+      const usuariosList = document.getElementById('usuarios-list');
+      const actualizarUsuarioForm = document.getElementById('actualizar-usuario-form');
+      const eliminarUsuarioForm = document.getElementById('eliminar-usuario-form');
+      const usuarioIdSelect = document.getElementById('usuario-id');
+      const eliminarUsuarioIdSelect = document.getElementById('eliminar-usuario-id');
+
+      // Función para cargar la lista de usuarios en los select
+      const cargarListaUsuarios = async () => {
+        try {
+          const response = await fetch('http://localhost:3000/personas');
+          const usuarios = await response.json();
+
+          usuarioIdSelect.innerHTML = '';
+          eliminarUsuarioIdSelect.innerHTML = '';
+
+          usuarios.forEach(usuario => {
+            const option = document.createElement('option');
+            option.value = usuario.id;
+            option.textContent = usuario.nombre;
+            usuarioIdSelect.appendChild(option);
+          });
+          usuarios.forEach(usuario => {
+            const option = document.createElement('option');
+            option.value = usuario.id;
+            option.textContent = usuario.nombre;
+            eliminarUsuarioIdSelect.appendChild(option);
+          });
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      };
+
+      cargarListaUsuarios();
+
+      // Función para crear un usuario
+      crearUsuarioForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const nombre = crearUsuarioForm.nombre.value;
+        const correo = crearUsuarioForm.correo.value;
+        const habilidades = crearUsuarioForm.habilidades.value;
+        const tarifaHora = parseInt(crearUsuarioForm.tarifa_hora.value);
+
+        try {
+          const response = await fetch('http://localhost:3000/personas', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ nombre, correo_electronico: correo, habilidades, tarifa_hora: tarifaHora }),
+          });
+
+          const responseData = await response.json();
+          alert('Usuario creado exitosamente');
+          crearUsuarioForm.reset();
+          cargarListaUsuarios();
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      });
+
+      // Función para leer usuarios
+      leerUsuariosBtn.addEventListener('click', async () => {
+        try {
+          const response = await fetch('http://localhost:3000/personas');
+          const usuarios = await response.json();
+
+          usuariosList.innerHTML = '';
+
+          usuarios.forEach(usuario => {
+            const li = document.createElement('li');
+            li.textContent = `${usuario.nombre} (${usuario.correo_electronico}) - Habilidades: ${usuario.habilidades} - Tarifa por Hora: ${usuario.tarifa_hora}`;
+            usuariosList.appendChild(li);
+          });
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      });
+
+      // Función para actualizar usuario
+      actualizarUsuarioForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const usuarioIdActualizar = parseInt(actualizarUsuarioForm.usuario_id.value);
+        const nuevoNombre = actualizarUsuarioForm.nuevo_nombre.value;
+        const nuevoCorreo = actualizarUsuarioForm.nuevo_correo.value;
+        const nuevasHabilidades = actualizarUsuarioForm.nuevas_habilidades.value;
+        const nuevaTarifaHora = parseInt(actualizarUsuarioForm.nueva_tarifa.value);
+
+        try {
+          const response = await fetch(`http://localhost:3000/personas/${usuarioIdActualizar}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ nombre: nuevoNombre, correo_electronico: nuevoCorreo, habilidades: nuevasHabilidades, tarifa_hora: nuevaTarifaHora }),
+          });
+
+          const responseData = await response.json();
+          alert('Usuario actualizado exitosamente');
+          actualizarUsuarioForm.reset();
+          cargarListaUsuarios();
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      });
+
+      eliminarUsuarioForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const usuarioIdEliminar = parseInt(eliminarUsuarioForm.eliminar_usuario_id.value);
+
+        try {
+          const response = await fetch(`http://localhost:3000/personas/${usuarioIdEliminar}`, {
+            method: 'DELETE',
+          });
+
+          const responseData = await response.json();
+          alert('Usuario eliminado exitosamente');
+          eliminarUsuarioForm.reset();
+          cargarListaUsuarios(); // Cargar la lista de usuarios nuevamente
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      });
+
+    });
+  </script>
+</body>
+</html>

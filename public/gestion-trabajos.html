@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Trabajos</title>
+</head>
+<body>
+  <h1>Gestión de Trabajos</h1>
+  
+  <div>
+    <h2>Crear Trabajo</h2>
+    <form id="crear-trabajo-form">
+      <label for="id-persona">Persona:</label>
+      <select id="id-persona" name="id_persona" required>
+      </select>
+      <label for="fecha">Fecha (YYYY-MM-DD):</label>
+      <input type="date" id="fecha" name="fecha" required>
+      <label for="duracion">Duración (horas):</label>
+      <input type="number" id="duracion" name="duracion" required>
+      <label for="monto-pago">Monto de Pago:</label>
+      <input type="number" id="monto-pago" name="monto_pago" required>
+      <label for="estado">Estado:</label>
+      <input type="text" id="estado" name="estado" required>
+      <button type="submit">Crear</button>
+    </form>
+  </div>
+
+  <div>
+    <h2>Leer Trabajos</h2>
+    <button id="leer-trabajos-btn">Leer Trabajos</button>
+    <ul id="trabajos-list"></ul>
+  </div>
+
+  <div>
+    <h2>Editar Trabajo</h2>
+    <form id="editar-trabajo-form">
+      <label for="trabajo-id">Trabajo:</label>
+      <select id="trabajo-id" name="trabajo_id">
+      </select>
+      <label for="nuevo-estado">Nuevo Estado:</label>
+      <input type="text" id="nuevo-estado" name="nuevo_estado">
+      <label for="nuevo-monto">Nuevo Monto de Pago:</label>
+      <input type="number" id="nuevo-monto" name="nuevo_monto">
+      <button type="submit">Actualizar</button>
+    </form>
+  </div>
+
+  <div>
+    <h2>Eliminar Trabajo</h2>
+    <form id="eliminar-trabajo-form">
+      <label for="eliminar-trabajo-id">Trabajo:</label>
+      <select id="eliminar-trabajo-id" name="eliminar_trabajo_id"></select>
+      <button type="submit">Eliminar</button>
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const crearTrabajoForm = document.getElementById('crear-trabajo-form');
+      const leerTrabajosBtn = document.getElementById('leer-trabajos-btn');
+      const trabajosList = document.getElementById('trabajos-list');
+      const editarTrabajoForm = document.getElementById('editar-trabajo-form');
+      const eliminarTrabajoForm = document.getElementById('eliminar-trabajo-form');
+      const trabajoIdSelect = document.getElementById('trabajo-id');
+      const eliminarTrabajoIdSelect = document.getElementById('eliminar-trabajo-id');
+      const idPersonaSelect = document.getElementById('id-persona');
+
+      // Función para cargar la lista de trabajos en los select
+      const cargarListaTrabajos = async () => {
+        try {
+          const responseTrabajos = await fetch('http://localhost:3000/trabajos');
+          const trabajos = await responseTrabajos.json();
+
+          trabajoIdSelect.innerHTML = '';
+          eliminarTrabajoIdSelect.innerHTML = '';
+
+          trabajos.forEach(trabajo => {
+            const option = document.createElement('option');
+            option.value = trabajo.id;
+            option.textContent = `Persona: ${trabajo.id_persona} - Fecha: ${trabajo.fecha}`;
+            trabajoIdSelect.appendChild(option);
+            eliminarTrabajoIdSelect.appendChild(option.cloneNode(true));
+          });
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      };
+
+      cargarListaTrabajos();
+
+      // Función para cargar la lista de personas en el select de creación
+      const cargarListaPersonas = async () => {
+        try {
+          const responsePersonas = await fetch('http://localhost:3000/personas');
+          const personas = await responsePersonas.json();
+
+          idPersonaSelect.innerHTML = '';
+
+          personas.forEach(persona => {
+            const option = document.createElement('option');
+            option.value = persona.id;
+            option.textContent = persona.nombre;
+            idPersonaSelect.appendChild(option);
+          });
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      };
+
+      cargarListaPersonas();
+
+      // Función para crear un trabajo
+      crearTrabajoForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const idPersona = parseInt(crearTrabajoForm.id_persona.value);
+        const fecha = crearTrabajoForm.fecha.value;
+        const duracion = parseInt(crearTrabajoForm.duracion.value);
+        const montoPago = parseInt(crearTrabajoForm.monto_pago.value);
+        const estado = crearTrabajoForm.estado.value;
+
+        try {
+          const response = await fetch('http://localhost:3000/trabajos', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id_persona: idPersona, fecha, duracion, monto_pago: montoPago, estado }),
+          });
+
+          const responseData = await response.json();
+          alert('Trabajo creado exitosamente');
+          crearTrabajoForm.reset();
+          cargarListaTrabajos();
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      });
+
+      // Función para leer trabajos
+      leerTrabajosBtn.addEventListener('click', async () => {
+        try {
+          const response = await fetch('http://localhost:3000/trabajos');
+          const trabajos = await response.json();
+
+          trabajosList.innerHTML = '';
+
+          trabajos.forEach(trabajo => {
+            const li = document.createElement('li');
+            li.textContent = `Persona: ${trabajo.id_persona} - Fecha: ${trabajo.fecha} - Duración: ${trabajo.duracion} horas - Monto de Pago: ${trabajo.monto_pago} - Estado: ${trabajo.estado}`;
+            trabajosList.appendChild(li);
+          });
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      });
+
+      // Función para editar trabajo
+      editarTrabajoForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const trabajoIdActualizar = parseInt(editarTrabajoForm.trabajo_id.value);
+        const nuevoEstado = editarTrabajoForm.nuevo_estado.value;
+        const nuevoMontoPago = parseInt(editarTrabajoForm.nuevo_monto.value);
+
+        try {
+          const response = await fetch(`http://localhost:3000/trabajos/${trabajoIdActualizar}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ estado: nuevoEstado, monto_pago: nuevoMontoPago }),
+          });
+
+          const responseData = await response.json();
+          alert('Trabajo actualizado exitosamente');
+          editarTrabajoForm.reset();
+          cargarListaTrabajos();
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      });
+
+      // Función para eliminar trabajo
+      eliminarTrabajoForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const trabajoIdEliminar = parseInt(eliminarTrabajoForm.eliminar_trabajo_id.value);
+
+        try {
+          const response = await fetch(`http://localhost:3000/trabajos/${trabajoIdEliminar}`, {
+            method: 'DELETE',
+          });
+
+          const responseData = await response.json();
+          alert('Trabajo eliminado exitosamente');
+          eliminarTrabajoForm.reset();
+          cargarListaTrabajos();
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      });
+
+    });
+  </script>
+</body>
+</html>

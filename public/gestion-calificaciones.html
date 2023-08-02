@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Calificaciones</title>
+</head>
+<body>
+  <h1>Gestión de Calificaciones</h1>
+  
+  <div>
+    <h2>Crear Calificación</h2>
+    <form id="crear-calificacion-form">
+      <label for="id-persona-calificada">Seleccione una Persona:</label>
+      <select id="id-persona-calificada" name="id_persona_calificada">
+      </select>
+      <label for="calificacion">Calificación:</label>
+      <input type="number" id="calificacion" name="calificacion" min="1" max="5" required>
+      <label for="comentario">Comentario:</label>
+      <input type="text" id="comentario" name="comentario">
+      <button type="submit">Crear</button>
+    </form>
+  </div>
+
+  <div>
+    <h2>Leer Calificaciones</h2>
+    <button id="leer-calificaciones-btn">Leer Calificaciones</button>
+    <ul id="calificaciones-list"></ul>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const crearCalificacionForm = document.getElementById('crear-calificacion-form');
+      const leerCalificacionesBtn = document.getElementById('leer-calificaciones-btn');
+      const calificacionesList = document.getElementById('calificaciones-list');
+      const idPersonaCalificadaSelect = document.getElementById('id-persona-calificada');
+
+      // Función para cargar la lista de personas en el select
+      const cargarListaPersonas = async () => {
+        try {
+          const response = await fetch('http://localhost:3000/personas');
+          const personas = await response.json();
+
+          idPersonaCalificadaSelect.innerHTML = '';
+
+          personas.forEach(persona => {
+            const option = document.createElement('option');
+            option.value = persona.id;
+            option.textContent = persona.nombre;
+            idPersonaCalificadaSelect.appendChild(option);
+          });
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      };
+
+      cargarListaPersonas();
+
+      // Función para crear una calificación
+      crearCalificacionForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const idPersonaCalificada = parseInt(crearCalificacionForm.id_persona_calificada.value);
+        const calificacion = parseInt(crearCalificacionForm.calificacion.value);
+        const comentario = crearCalificacionForm.comentario.value; // Nuevo campo
+
+        try {
+          const response = await fetch('http://localhost:3000/calificaciones', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id_persona_calificada: idPersonaCalificada, calificacion, comentario }), // Agregamos el comentario
+          });
+
+          const responseData = await response.json();
+          alert('Calificación creada exitosamente');
+          crearCalificacionForm.reset();
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      });
+
+      // Función para leer calificaciones
+      leerCalificacionesBtn.addEventListener('click', async () => {
+        try {
+          const response = await fetch('http://localhost:3000/calificaciones');
+          const calificaciones = await response.json();
+
+          calificacionesList.innerHTML = '';
+
+          calificaciones.forEach(calificacion => {
+            const li = document.createElement('li');
+            li.textContent = `Persona: ${calificacion.id_persona_calificada} - Calificación: ${calificacion.calificacion} - Comentario: ${calificacion.comentario}`; // Mostramos el comentario
+            calificacionesList.appendChild(li);
+          });
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      });
+
+    });
+  </script>
+</body>
+</html>
